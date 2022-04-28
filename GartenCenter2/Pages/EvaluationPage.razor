@@ -1,0 +1,76 @@
+﻿@page "/evaluationPage"
+
+@using GartenCenter2.BAL
+@using GartenCenter2.Services
+@using System.ComponentModel.DataAnnotations
+@using Helper
+@using System.Linq;
+
+@inject IJSRuntime JsRuntime
+@inject LieferungServices deliveryServices
+@inject ArticleServices articleServices
+@inject LieferantServices supplierServices
+@inject NavigationManager NavigationManager
+
+
+
+<h1>Evaluation</h1>
+
+@if (lieferungsList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>article</th>
+                <th>supplier</th>
+                <th>Day of delivery</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in lieferungsList)
+            {
+                <tr>
+                    <td>@item.Article.Name</td>
+                    <td>@item.Lieferant.Name</td>
+                    <td>@item.DayOfDelivery</td>
+                    <td>@item.Amount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Max Amount = @MaxAmountLieferung.Article.Name / @MaxAmountLieferung.Amount</h2>
+}
+
+@code {
+
+    System.Collections.Generic.List<BAL.Lieferung> lieferungsList;
+    Lieferung MaxAmountLieferung { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (Helper.Login.isLogin == false) { NavigationManager.NavigateTo("/"); await JsRuntime.InvokeVoidAsync("alert", "Please login first!"); return; }
+            lieferungsList = await deliveryServices.GetAllAsync();
+
+            int max = lieferungsList.Max(i => i.Amount);
+            MaxAmountLieferung = lieferungsList.First(x => x.Amount == max);
+
+            var maxAmountLiefer = lieferungsList.OrderByDescending(x => x.Amount).FirstOrDefault();
+
+        }
+        catch  (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", ex.Message);
+            return;
+        }
+       
+    }
+    
+}

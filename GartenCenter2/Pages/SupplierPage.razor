@@ -1,0 +1,66 @@
+﻿@page "/SupplierPage"
+@using GartenCenter2.BAL
+@using GartenCenter2.Services
+@using System.ComponentModel.DataAnnotations
+@using Helper
+
+@inject IJSRuntime JsRuntime
+@inject LieferungServices deliveryServices
+@inject ArticleServices articleServices
+@inject LieferantServices supplierServices
+@inject CategoryServices categoryServices
+@inject NavigationManager NavigationManager
+
+
+
+<h1>Add supplier</h1>
+
+<EditForm Model="@supplier" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+
+
+    <label><strong>Name:</strong></label>
+    <InputText id="Name" @bind-Value="@supplier.Name" />
+    <ValidationMessage For="@(() => supplier.Name)" />
+
+
+    <br />
+
+    <label><strong>Country:</strong></label>
+    <InputText id="Gender" @bind-Value="@supplier.Country" />
+    <ValidationMessage For="@(() => supplier.Country)" />
+
+
+    <br />
+    <br />
+    <button type="submit">add supplier</button>
+</EditForm>
+
+
+
+
+@code {
+    private Lieferant supplier = new Lieferant();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Helper.Login.isLogin == false) { NavigationManager.NavigateTo("/"); await JsRuntime.InvokeVoidAsync("alert", "Please login first!"); return; }
+    }
+
+    protected async void Submit()
+    {
+        try
+        {
+            await supplierServices.UpdateAsync(supplier);
+            await JsRuntime.InvokeVoidAsync("alert", "supplier created!");
+            supplier = new Lieferant();
+            StateHasChanged();
+            NavigationManager.NavigateTo("SupplierPage");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", ex.Message);
+            return;
+        }
+    }
+}

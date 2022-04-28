@@ -1,0 +1,85 @@
+﻿@page "/ArticlePage"
+
+@using GartenCenter2.BAL
+@using GartenCenter2.Services
+@using System.ComponentModel.DataAnnotations
+@using Helper
+
+@inject IJSRuntime JsRuntime
+@inject LieferungServices deliveryServices
+@inject ArticleServices articleServices
+@inject LieferantServices supplierServices
+@inject CategoryServices categoryServices
+@inject NavigationManager NavigationManager
+
+
+<h1>Add article</h1>
+
+<EditForm Model="@article" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+
+
+    <label><strong>select category:</strong></label>
+    <InputSelect  @bind-Value="@article.selectedCategoryId">
+
+        @if (categoryList != null)
+        {
+
+            <option value="0">select</option>
+            @foreach (var item in categoryList)
+            {
+                <option value="@item.Id">@item.Name</option>
+            }
+        }
+    </InputSelect>
+    <ValidationMessage For="@(() => article.selectedCategoryId)" />
+
+    <br />
+
+    <label><strong>Name:</strong></label>
+    <InputText id="Name" @bind-Value="@article.Name" />
+    <ValidationMessage For="@(() => article.Name)" />
+
+
+    <br />
+
+    <label><strong>Price:</strong></label>
+    <InputNumber id="Gender" @bind-Value="@article.Price" />
+    <ValidationMessage For="@(() => article.Price)" />
+
+
+    <br />
+    <br />
+    <button type="submit">add article</button>
+</EditForm>
+
+@code {
+    private Article article = new Article();
+
+    private List<Category> categoryList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Helper.Login.isLogin == false) { NavigationManager.NavigateTo("/"); await JsRuntime.InvokeVoidAsync("alert", "Please login first!"); return; }
+
+        categoryList = await categoryServices.GetAllAsync();
+    }
+
+    protected async void Submit()
+    {
+        try
+        {
+            article.CategoryId = Convert.ToInt32(article.selectedCategoryId);
+            await articleServices.UpdateAsync(article);
+            await JsRuntime.InvokeVoidAsync("alert", "article created!");
+            article = new Article();
+            StateHasChanged();
+            NavigationManager.NavigateTo("ArticlePage");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", ex.Message);
+            return;
+        }
+    }
+}

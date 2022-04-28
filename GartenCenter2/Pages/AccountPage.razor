@@ -1,0 +1,56 @@
+﻿@page "/AccountPage"
+
+@using GartenCenter2.Services
+@using Microsoft.AspNetCore.Components
+@using GartenCenter2.BAL
+@using GartenCenter2.Helper
+@inject IJSRuntime JsRuntime
+@inject AccountServices accountServices
+@inject NavigationManager NavigationManager
+
+<h1>Add account</h1>
+
+<EditForm Model="@account" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+       
+            <label><strong>Username:</strong></label>
+            <InputText id="Username" @bind-Value="@account.Username" />
+            <ValidationMessage For="@(() => @account.Username)" />
+
+             <br/>
+
+             <label><strong>Password:</strong></label>
+            <InputText type="password" id="Password" @bind-Value="@account.Password" />
+            <ValidationMessage For="@(() => @account.Password)" />
+
+            <br/>
+            <br/>
+            <button type="submit">add account</button>
+</EditForm>
+
+@code {
+    private Account account = new Account();
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    protected async void Submit()
+    {
+        try
+        {
+	        var hashPassword = Hashing.HashPassword(account.Password);
+
+	        account.Password = hashPassword;  
+
+	        await accountServices.UpdateAsync(account);
+	        
+	        await JsRuntime.InvokeVoidAsync("alert", "account created!");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", ex.Message);
+        }
+  
+	}
+}
